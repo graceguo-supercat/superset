@@ -9,8 +9,11 @@ import {
 } from 'react-virtualized';
 import { getTextWidth } from '../../modules/visUtils';
 
+import JSONPopover from '../JSONPopover';
+
 const propTypes = {
   orderedColumnKeys: PropTypes.array.isRequired,
+  columns: PropTypes.array.isRequired,
   data: PropTypes.array.isRequired,
   height: PropTypes.number.isRequired,
   filterText: PropTypes.string,
@@ -33,6 +36,7 @@ export default class FilterableTable extends PureComponent {
     super(props);
     this.list = List(this.formatTableData(props.data));
     this.headerRenderer = this.headerRenderer.bind(this);
+    this.cellRender = this.cellRender.bind(this);
     this.rowClassName = this.rowClassName.bind(this);
     this.sort = this.sort.bind(this);
 
@@ -114,6 +118,30 @@ export default class FilterableTable extends PureComponent {
     );
   }
 
+  cellRender({ cellData, rowData, dataKey }) {
+    const rawCellData = rowData[dataKey];
+    let dataType = this.props.columns.find((col) => (col.name === dataKey)).type;
+
+    if (rawCellData &&
+      (typeof rawCellData === 'object' || Array.isArray(rawCellData)) ||
+      (typeof cellData === 'string' &&
+        (cellData.startsWith('[') && cellData.endsWith(']') || cellData.startsWith('{') && cellData.endsWith('}')))
+    ) {
+      return (
+        <div>
+          <JSONPopover
+            columnName={dataKey}
+            dataType={dataType}
+            data={rawCellData}
+          />
+          &nbsp;&nbsp;<span>{cellData}</span>
+        </div>
+      );
+    }
+
+    return cellData;
+  }
+
   rowClassName({ index }) {
     let className = '';
     if (this.props.striped) {
@@ -179,6 +207,7 @@ export default class FilterableTable extends PureComponent {
                 width={this.widthsForColumnsByKey[columnKey]}
                 label={columnKey}
                 key={columnKey}
+                cellRenderer={this.cellRender}
               />
             ))}
           </Table>

@@ -86,3 +86,9 @@ export function getShortUrl(longUrl, callback) {
     },
   });
 }
+
+export function isJSONString(str) {
+  return str &&
+    typeof str === 'string' &&
+    (str.startsWith('{') && str.endsWith('}' || str.startsWith('[') && str.endsWith(']')));
+}

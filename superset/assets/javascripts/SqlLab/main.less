@@ -1,3 +1,5 @@
+@import '../../stylesheets/superset.less';
+
 body {
     overflow: hidden;
 }
@@ -297,5 +299,33 @@ a.Link {
 
     .Select {
         margin-right: 3px;
+    }
+}
+
+#json-viewer {
+    .modal-dialog{
+        position: relative;
+        display: table; /* This is important */
+        overflow-y: auto;
+        overflow-x: auto;
+        width: 80%;
+    }
+
+    .modal-dialog,
+    .modal-content,
+    .modal-body {
+        height: 800px;
+    }
+
+    .data-container {
+        height: 50%;
+        overflow-y: scroll;
+    }
+}
+.fa-plus-square-o {
+    color: @brand-primary;
+
+    &:hover {
+        cursor: pointer;
     }
 }

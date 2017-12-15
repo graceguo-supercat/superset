@@ -81,6 +81,7 @@
     "react-dom": "^15.6.2",
     "react-gravatar": "^2.6.1",
     "react-grid-layout": "^0.16.0",
+    "react-json-inspector": "^7.1.1",
     "react-map-gl": "^3.0.4",
     "react-redux": "^5.0.2",
     "react-resizable": "^1.3.3",
