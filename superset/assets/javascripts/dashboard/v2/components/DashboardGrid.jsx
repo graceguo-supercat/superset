@@ -13,7 +13,7 @@ import {
 } from '../util/constants';
 
 const propTypes = {
-  dashboard: PropTypes.object.isRequired,
+  layout: PropTypes.object.isRequired,
   updateComponents: PropTypes.func.isRequired,
   handleComponentDrop: PropTypes.func.isRequired,
 };
@@ -61,8 +61,8 @@ class DashboardGrid extends React.PureComponent {
   }
 
   handleResizeStop({ id, widthMultiple, heightMultiple }) {
-    const { dashboard: components, updateComponents } = this.props;
-    const component = components[id];
+    const { layout, updateComponents } = this.props;
+    const component = layout[id];
     if (
       component &&
       (component.meta.width !== widthMultiple || component.meta.height !== heightMultiple)
@@ -85,9 +85,9 @@ class DashboardGrid extends React.PureComponent {
   }
 
   render() {
-    const { dashboard: components, handleComponentDrop } = this.props;
+    const { layout, handleComponentDrop, cells } = this.props;
     const { isResizing, rowGuideTop } = this.state;
-    const rootComponent = components[DASHBOARD_ROOT_ID];
+    const rootComponent = layout[DASHBOARD_ROOT_ID];
 
     return (
       <div
@@ -114,6 +114,7 @@ class DashboardGrid extends React.PureComponent {
                     index={index}
                     availableColumnCount={GRID_COLUMN_COUNT}
                     columnWidth={columnWidth}
+                    cells={cells}
                     onResizeStart={this.handleResizeStart}
                     onResize={this.handleResize}
                     onResizeStop={this.handleResizeStop}

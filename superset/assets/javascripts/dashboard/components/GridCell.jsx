@@ -68,7 +68,7 @@ class GridCell extends React.PureComponent {
   }
 
   width() {
-    return this.props.widgetWidth - 10;
+    return this.props.widgetWidth - 32;
   }
 
   height(slice) {
@@ -80,7 +80,7 @@ class GridCell extends React.PureComponent {
       descriptionHeight = this.refs[descriptionId].offsetHeight + 10;
     }
 
-    return widgetHeight - headerHeight - descriptionHeight;
+    return widgetHeight - headerHeight - descriptionHeight - 32;
   }
 
   headerHeight(slice) {
@@ -128,7 +128,9 @@ class GridCell extends React.PureComponent {
           ref={this.getDescriptionId(slice)}
           dangerouslySetInnerHTML={{ __html: slice.description_markeddown }}
         />
-        <div className="row chart-container">
+        <div className="chart-container"
+             style={{ width: this.width(), height: this.height(slice) }}
+        >
           <input type="hidden" value="false" />
           <ChartContainer
             containerId={`slice-container-${slice.slice_id}`}

@@ -3,6 +3,7 @@ import d3 from 'd3';
 import shortid from 'shortid';
 
 import charts, { chart } from '../chart/chartReducer';
+import layoutReducer from './v2/reducers/dashboard';
 import * as actions from './actions';
 import { getParam } from '../modules/utils';
 import { alterInArr, removeFromArr } from '../reduxUtils';
@@ -32,42 +33,9 @@ export function getInitialState(bootstrapData) {
     }
   }
 
-  dashboard.posDict = {};
-  dashboard.layout = [];
-  if (Array.isArray(dashboard.position_json)) {
-    dashboard.position_json.forEach((position) => {
-      dashboard.posDict[position.slice_id] = position;
-    });
-  } else {
-    dashboard.position_json = [];
-  }
-
-  const lastRowId = Math.max(0, Math.max.apply(null,
-    dashboard.position_json.map(pos => (pos.row + pos.size_y))));
-  let newSliceCounter = 0;
-  dashboard.slices.forEach((slice) => {
-    const sliceId = slice.slice_id;
-    let pos = dashboard.posDict[sliceId];
-    if (!pos) {
-      // append new slices to dashboard bottom, 3 slices per row
-      pos = {
-        col: (newSliceCounter % 3) * 16 + 1,
-        row: lastRowId + Math.floor(newSliceCounter / 3) * 16,
-        size_x: 16,
-        size_y: 16,
-      };
-      newSliceCounter++;
-    }
-
-    dashboard.layout.push({
-      i: String(sliceId),
-      x: pos.col - 1,
-      y: pos.row,
-      w: pos.size_x,
-      minW: 2,
-      h: pos.size_y,
-    });
-  });
+  const layout = { ...dashboard.position_json };
+  delete dashboard.position_json;
+  delete dashboard.css;
 
   // will use charts action/reducers to handle chart render
   const initCharts = {};
@@ -89,6 +57,7 @@ export function getInitialState(bootstrapData) {
   return {
     charts: initCharts,
     dashboard: { filters, dashboard, userId: user_id, datasources, common, editMode: false },
+    layout,
   };
 }
 
@@ -206,8 +175,16 @@ export const dashboard = function (state = {}, action) {
   return state;
 };
 
+const impressionId = function (state = '') {
+  if (!state) {
+    state = shortid.generate();
+  }
+  return state;
+};
+
 export default combineReducers({
   charts,
   dashboard,
-  impressionId: () => (shortid.generate()),
+  layout: layoutReducer,
+  impressionId,
 });

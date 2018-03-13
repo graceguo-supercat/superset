@@ -7,9 +7,10 @@ import {
   handleComponentDrop,
 } from '../actions';
 
-function mapStateToProps({ dashboard = {} }) {
+function mapStateToProps({ layout = {} }, ownProps) {
   return {
-    dashboard,
+    layout,
+    cells: ownProps.cells,
   };
 }
 

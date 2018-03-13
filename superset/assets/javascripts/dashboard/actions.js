@@ -17,11 +17,6 @@ export function removeFilter(sliceId, col, vals, refresh = true) {
   return { type: REMOVE_FILTER, sliceId, col, vals, refresh };
 }
 
-export const UPDATE_DASHBOARD_LAYOUT = 'UPDATE_DASHBOARD_LAYOUT';
-export function updateDashboardLayout(layout) {
-  return { type: UPDATE_DASHBOARD_LAYOUT, layout };
-}
-
 export const UPDATE_DASHBOARD_TITLE = 'UPDATE_DASHBOARD_TITLE';
 export function updateDashboardTitle(title) {
   return { type: UPDATE_DASHBOARD_TITLE, title };

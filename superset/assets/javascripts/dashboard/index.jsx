@@ -8,30 +8,18 @@ import { initEnhancer } from '../reduxUtils';
 import { appSetup } from '../common';
 import { initJQueryAjax } from '../modules/utils';
 import DashboardContainer from './components/DashboardContainer';
-// import rootReducer, { getInitialState } from './reducers';
-
-import testLayout from './v2/fixtures/testLayout';
-import rootReducer from './v2/reducers/';
+import rootReducer, { getInitialState } from './reducers';
 
 appSetup();
 initJQueryAjax();
 
 const appContainer = document.getElementById('app');
-// const bootstrapData = JSON.parse(appContainer.getAttribute('data-bootstrap'));
-// const initState = Object.assign({}, getInitialState(bootstrapData));
-const initState = {
-  dashboard: testLayout,
-};
+const bootstrapData = JSON.parse(appContainer.getAttribute('data-bootstrap'));
+const initState = Object.assign({}, getInitialState(bootstrapData));
 
 const store = createStore(
-  rootReducer,
-  initState,
-  compose(
-    applyMiddleware(thunk),
-    initEnhancer(false),
-  ),
-);
-
+  rootReducer, initState, compose(applyMiddleware(thunk), initEnhancer(false)));
+console.log(store.getState())
 ReactDOM.render(
   <Provider store={store}>
     <DashboardContainer />

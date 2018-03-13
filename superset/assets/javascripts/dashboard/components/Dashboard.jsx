@@ -11,6 +11,8 @@ import { Logger, ActionLog, LOG_ACTIONS_PAGE_LOAD,
 import { t } from '../../locales';
 
 import '../../../stylesheets/dashboard.css';
+import '../../../stylesheets/dashboard-v2.css';
+import '../v2/stylesheets/index.less';
 
 const propTypes = {
   actions: PropTypes.object,
@@ -18,6 +20,7 @@ const propTypes = {
   dashboard: PropTypes.object.isRequired,
   slices: PropTypes.object,
   datasources: PropTypes.object,
+  layout: PropTypes.object.isRequired,
   filters: PropTypes.object,
   refresh: PropTypes.bool,
   timeout: PropTypes.number,
@@ -61,7 +64,6 @@ class Dashboard extends React.PureComponent {
     this.updateDashboardTitle = this.updateDashboardTitle.bind(this);
     this.onSave = this.onSave.bind(this);
     this.onChange = this.onChange.bind(this);
-    this.serialize = this.serialize.bind(this);
     this.fetchAllSlices = this.fetchSlices.bind(this, this.getAllSlices());
     this.startPeriodicRender = this.startPeriodicRender.bind(this);
     this.addSlicesToDashboard = this.addSlicesToDashboard.bind(this);
@@ -74,7 +76,6 @@ class Dashboard extends React.PureComponent {
     this.props.actions.saveSlice = this.props.actions.saveSlice.bind(this);
     this.props.actions.removeSlice = this.props.actions.removeSlice.bind(this);
     this.props.actions.removeChart = this.props.actions.removeChart.bind(this);
-    this.props.actions.updateDashboardLayout = this.props.actions.updateDashboardLayout.bind(this);
     this.props.actions.toggleExpandSlice = this.props.actions.toggleExpandSlice.bind(this);
     this.props.actions.addFilter = this.props.actions.addFilter.bind(this);
     this.props.actions.clearFilter = this.props.actions.clearFilter.bind(this);
@@ -237,16 +238,6 @@ class Dashboard extends React.PureComponent {
     this.onChange();
   }
 
-  serialize() {
-    return this.props.dashboard.layout.map(reactPos => ({
-      slice_id: reactPos.i,
-      col: reactPos.x + 1,
-      row: reactPos.y,
-      size_x: reactPos.w,
-      size_y: reactPos.h,
-    }));
-  }
-
   addSlicesToDashboard(sliceIds) {
     return this.props.actions.addSlicesToDashboard(this.props.dashboard.id, sliceIds);
   }
@@ -303,6 +294,7 @@ class Dashboard extends React.PureComponent {
           <AlertsWrapper initMessages={this.props.initMessages} />
           <Header
             dashboard={this.props.dashboard}
+            layout={this.props.layout}
             unsavedChanges={this.state.unsavedChanges}
             filters={this.props.filters}
             userId={this.props.userId}
@@ -310,7 +302,6 @@ class Dashboard extends React.PureComponent {
             updateDashboardTitle={this.updateDashboardTitle}
             onSave={this.onSave}
             onChange={this.onChange}
-            serialize={this.serialize}
             fetchFaveStar={this.props.actions.fetchFaveStar}
             saveFaveStar={this.props.actions.saveFaveStar}
             renderSlices={this.fetchAllSlices}
@@ -335,7 +326,6 @@ class Dashboard extends React.PureComponent {
             saveSlice={this.props.actions.saveSlice}
             removeSlice={this.props.actions.removeSlice}
             removeChart={this.props.actions.removeChart}
-            updateDashboardLayout={this.props.actions.updateDashboardLayout}
             toggleExpandSlice={this.props.actions.toggleExpandSlice}
             addFilter={this.props.actions.addFilter}
             getFilters={this.getFilters}

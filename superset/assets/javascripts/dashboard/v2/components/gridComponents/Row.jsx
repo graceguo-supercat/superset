@@ -94,6 +94,7 @@ class Row extends React.PureComponent {
       onResize,
       onResizeStop,
       handleComponentDrop,
+      cells,
     } = this.props;
 
     const rowItems = [];
@@ -162,6 +163,7 @@ class Row extends React.PureComponent {
                     index={itemIndex / 2} // account for gutters!
                     availableColumnCount={availableColumnCount - occupiedColumnCount}
                     occupiedRowCount={occupiedRowCount}
+                    cells={cells}
                     columnWidth={columnWidth}
                     onResizeStart={onResizeStart}
                     onResize={onResize}

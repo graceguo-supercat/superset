@@ -63,6 +63,7 @@ class Column extends React.PureComponent {
       onResize,
       onResizeStop,
       handleComponentDrop,
+      cells,
     } = this.props;
 
     const columnItems = [];
@@ -120,6 +121,7 @@ class Column extends React.PureComponent {
                     depth={depth + 1}
                     index={itemIndex / 2} // account for gutters!
                     availableColumnCount={availableColumnCount}
+                    cells={cells}
                     columnWidth={columnWidth}
                     onResizeStart={onResizeStart}
                     onResize={onResize}

@@ -1580,10 +1580,11 @@ class Superset(BaseSupersetView):
 
     @staticmethod
     def _set_dash_metadata(dashboard, data):
+        # TODO: verify slice_id in positions consist with dashboard.slices
         positions = data['positions']
-        slice_ids = [int(d['slice_id']) for d in positions]
-        dashboard.slices = [o for o in dashboard.slices if o.id in slice_ids]
-        positions = sorted(data['positions'], key=lambda x: int(x['slice_id']))
+        # slice_ids = [int(d['slice_id']) for d in positions]
+        dashboard.slices = [o for o in dashboard.slices]
+        # positions = sorted(data['positions'], key=lambda x: int(x['slice_id']))
         dashboard.position_json = json.dumps(positions, indent=4, sort_keys=True)
         md = dashboard.params_dict
         dashboard.css = data['css']

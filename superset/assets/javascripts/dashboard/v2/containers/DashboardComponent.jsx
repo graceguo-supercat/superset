@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 import ComponentLookup from '../components/gridComponents';
 import countChildRowsAndColumns from '../util/countChildRowsAndColumns';
 import { componentShape } from '../util/propShapes';
-import { ROW_TYPE } from '../util/componentTypes';
+import { CHART_TYPE, ROW_TYPE } from '../util/componentTypes';
 
 import {
   createComponent,
@@ -24,11 +24,11 @@ const propTypes = {
   handleComponentDrop: PropTypes.func.isRequired,
 };
 
-function mapStateToProps({ dashboard = {} }, ownProps) {
-  const { id, parentId } = ownProps;
+function mapStateToProps({ layout = {} }, ownProps) {
+  const { id, parentId, cells } = ownProps;
   const props = {
-    component: dashboard[id],
-    parentComponent: dashboard[parentId],
+    component: layout[id],
+    parentComponent: layout[parentId],
   };
 
   // row is a special component that needs extra dims about its children
@@ -36,11 +36,16 @@ function mapStateToProps({ dashboard = {} }, ownProps) {
   if (props.component.type === ROW_TYPE) {
     const { rowCount, columnCount } = countChildRowsAndColumns({
       component: props.component,
-      components: dashboard,
+      components: layout,
     });
 
     props.occupiedRowCount = rowCount;
     props.occupiedColumnCount = columnCount;
+  } else if (props.component.type === CHART_TYPE) {
+    const sliceId = props.component.meta && props.component.meta.sliceId;
+    if (sliceId) {
+      props.chart = cells[sliceId];
+    }
   }
 
   return props;

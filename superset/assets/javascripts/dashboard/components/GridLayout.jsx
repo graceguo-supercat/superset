@@ -1,13 +1,12 @@
 import React from 'react';
 import PropTypes from 'prop-types';
-import { Responsive, WidthProvider } from 'react-grid-layout';
+import HTML5Backend from 'react-dnd-html5-backend';
+import { DragDropContext } from 'react-dnd';
+import cx from 'classnames';
 
 import GridCell from './GridCell';
-
-require('react-grid-layout/css/styles.css');
-require('react-resizable/css/styles.css');
-
-const ResponsiveReactGridLayout = WidthProvider(Responsive);
+import BuilderComponentPane from '../v2/components/BuilderComponentPane';
+import DashboardGrid from '../v2/containers/DashboardGrid';
 
 const propTypes = {
   dashboard: PropTypes.object.isRequired,
@@ -23,7 +22,6 @@ const propTypes = {
   saveSlice: PropTypes.func,
   removeSlice: PropTypes.func,
   removeChart: PropTypes.func,
-  updateDashboardLayout: PropTypes.func,
   toggleExpandSlice: PropTypes.func,
   addFilter: PropTypes.func,
   getFilters: PropTypes.func,
@@ -41,7 +39,6 @@ const defaultProps = {
   saveSlice: () => ({}),
   removeSlice: () => ({}),
   removeChart: () => ({}),
-  updateDashboardLayout: () => ({}),
   toggleExpandSlice: () => ({}),
   addFilter: () => ({}),
   getFilters: () => ({}),
@@ -53,22 +50,10 @@ class GridLayout extends React.Component {
   constructor(props) {
     super(props);
 
-    this.onResizeStop = this.onResizeStop.bind(this);
-    this.onDragStop = this.onDragStop.bind(this);
     this.forceRefresh = this.forceRefresh.bind(this);
     this.removeSlice = this.removeSlice.bind(this);
     this.updateSliceName = this.props.dashboard.dash_edit_perm ?
       this.updateSliceName.bind(this) : null;
-  }
-
-  onResizeStop(layout) {
-    this.props.updateDashboardLayout(layout);
-    this.props.onChange();
-  }
-
-  onDragStop(layout) {
-    this.props.updateDashboardLayout(layout);
-    this.props.onChange();
   }
 
   getWidgetId(slice) {
@@ -80,7 +65,7 @@ class GridLayout extends React.Component {
     if (!widgetId || !this.refs[widgetId]) {
       return 400;
     }
-    return this.refs[widgetId].offsetHeight;
+    return this.refs[widgetId].parentNode.clientHeight;
   }
 
   getWidgetWidth(slice) {
@@ -88,7 +73,7 @@ class GridLayout extends React.Component {
     if (!widgetId || !this.refs[widgetId]) {
       return 400;
     }
-    return this.refs[widgetId].offsetWidth;
+    return this.refs[widgetId].parentNode.clientWidth;
   }
 
   findSliceIndexById(sliceId) {
@@ -131,11 +116,13 @@ class GridLayout extends React.Component {
   }
 
   render() {
-    const cells = this.props.dashboard.slices.map((slice) => {
+    const cells = {};
+    this.props.dashboard.slices.map((slice) => {
       const chartKey = `slice_${slice.slice_id}`;
       const currentChart = this.props.charts[chartKey];
       const queryResponse = currentChart.queryResponse || {};
-      return (
+      cells[chartKey] =
+        (
         <div
           id={'slice_' + slice.slice_id}
           key={slice.slice_id}
@@ -170,24 +157,17 @@ class GridLayout extends React.Component {
             annotationQuery={currentChart.annotationQuery}
             annotationError={currentChart.annotationError}
           />
-        </div>);
+        </div>
+        );
     });
 
     return (
-      <ResponsiveReactGridLayout
-        className="layout"
-        layouts={{ lg: this.props.dashboard.layout }}
-        onResizeStop={this.onResizeStop}
-        onDragStop={this.onDragStop}
-        cols={{ lg: 48, md: 48, sm: 40, xs: 32, xxs: 24 }}
-        rowHeight={10}
-        autoSize
-        margin={[20, 20]}
-        useCSSTransforms
-        draggableHandle=".drag"
-      >
-        {cells}
-      </ResponsiveReactGridLayout>
+      <div className={cx('dashboard-builder')}>
+        <DashboardGrid
+          cells={cells}
+        />
+        <BuilderComponentPane />
+      </div>
     );
   }
 }
@@ -195,4 +175,4 @@ class GridLayout extends React.Component {
 GridLayout.propTypes = propTypes;
 GridLayout.defaultProps = defaultProps;
 
-export default GridLayout;
+export default DragDropContext(HTML5Backend)(GridLayout);

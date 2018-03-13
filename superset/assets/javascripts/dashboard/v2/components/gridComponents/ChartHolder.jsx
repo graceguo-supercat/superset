@@ -21,6 +21,7 @@ const propTypes = {
   parentComponent: componentShape.isRequired,
   index: PropTypes.number.isRequired,
   depth: PropTypes.number.isRequired,
+  chart: PropTypes.object,
 
   // grid related
   availableColumnCount: PropTypes.number.isRequired,
@@ -37,7 +38,7 @@ const propTypes = {
 const defaultProps = {
 };
 
-class Chart extends React.Component {
+class ChartHolder extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -108,7 +109,7 @@ class Chart extends React.Component {
               ]}
             >
               <div className="dashboard-component dashboard-component-chart">
-                <div className="fa fa-area-chart" />
+                {this.props.chart}
               </div>
 
               {dropIndicatorProps && <div {...dropIndicatorProps} />}
@@ -120,7 +121,7 @@ class Chart extends React.Component {
   }
 }
 
-Chart.propTypes = propTypes;
-Chart.defaultProps = defaultProps;
+ChartHolder.propTypes = propTypes;
+ChartHolder.defaultProps = defaultProps;
 
-export default Chart;
+export default ChartHolder;
