@@ -18,12 +18,13 @@
 
 import json
 import logging
-import requests
+from urllib.parse import quote_plus
 from urllib import request
 from urllib.error import URLError
 
 from celery.utils.log import get_task_logger
 from sqlalchemy import and_, func
+from typing import Any, cast, Dict, List, Optional, Union
 
 from superset import app, db
 from superset.extensions import celery_app
@@ -265,25 +266,48 @@ class DashboardTableStrategy(Strategy):
         urls = []
         session = db.create_scoped_session()
 
-        # find tables for the dashboard
-        # @expose("/extra_table_metadata/<database_id>/<table_name>/<schema>/")
+        # find tables for all the dash needs to be warmed
+        # build map: { datasource_name: slices }
+        # this should run once a day
+        to_warmup_by_datasource: Dict[str, Dict] = {}
+        for dashboard_id in self.dashboard_ids:
+            dashboard = session.query(Dashboard).filter_by(id=dashboard_id).one()
+            slices = dashboard.slices
+            for slc in slices:
+                datasource_type = slc.datasource_type
+                datasource_name = slc.datasource_name
+                if datasource_type == "table" and datasource_name != "minerva.all":
+                    to_warmup_by_datasource[datasource_name] = to_warmup_by_datasource.get(datasource_name, {
+                        "slice_ids": [],
+                        "is_available": False,
+                    })
+                    to_warmup_by_datasource[datasource_name]["slice_ids"].append(slc.id)
+        print('to_warmup:{}'.format(json.dumps(to_warmup_by_datasource)))
+
+        # scan latest partition by datasource
+        # this should run multiple times a day
         mydb = session.query(models.Database).filter_by(id=108).one()
-        dashboard_id = 3592
-        dashboard = session.query(Dashboard).filter_by(id=dashboard_id).one()
-        for slc in dashboard.slices:
-            schema = "superset"
-            table_name = "dashboard_performance_logging"
-            data = mydb.db_engine_spec.extra_table_metadata(mydb, table_name, schema)
+        for datasource_name in to_warmup_by_datasource.items():
+            # schema = "superset"
+            # table_name = "dashboard_performance_logging"
+            # @expose("/extra_table_metadata/<database_id>/<table_name>/<schema>/")
+            parts = datasource_name.split('.')
+            data = mydb.db_engine_spec.extra_table_metadata(mydb, parts[1], parts[0])
             latest = data.get("partitions").get("latest").get("ds")
+            print('datasource {} latest partition:{}'.format(datasource_name, latest))
 
-            # send chart urls if its data is landed
-            is_available = True
-            if is_available:
-                url = get_form_data(slc.id, dashboard_id)
-                print('i am url with dashboard filter')
-                urls.append(url)
+            # for is_available datasources:
+            for slc in dashboard.slices:
+                # send chart urls if its data is landed
+                is_available = True
+                if is_available:
+                    form_data = get_form_data(slc.id, dashboard)
+                    # {'slice_id': 45181, 'extra_filters': [{'col': '__time_range', 'op': 'in', 'val': '2019-07-01T00:00:00 : now'}]}
+                    url = f"http://0.0.0.0:8088/superset/explore/?form_data={quote_plus(json.dumps(form_data))}&force=true"
+                    print('i am url with dashboard filter:{}'.format(url))
+                    urls.append(url)
 
-        return urls
+        return []
 
 
 strategies = [DummyStrategy, TopNDashboardsStrategy, DashboardTagsStrategy, DashboardTableStrategy]
@@ -320,7 +344,10 @@ def cache_warmup(strategy_name, *args, **kwargs):
     for url in strategy.get_urls():
         try:
             logger.info(f"Fetching {url}")
-            request.urlopen(url)
+            req = request.Request(url)
+            req.add_header("X-Internalauth-Username", "grace_guo")
+            req.add_header("Cookie", "session=.eJylkU9rHDEMxb9K8Hmz4_8zHgih9JR76aUEI1tyxmR2Zhl7k5aQ717v5hrKht4k9H7vCemN_YAw0_d1Ph2Wh2XOC_3M9Op9oVLyuvi0bgcPsbaajayrZ3W8qPNF_dLUHSB29z7N1XN_UdxJ1WvBdle5E-bqj8_N3gljrLsSq7nOxMY3dnNo6DfEmw-AvV_Hv2Z8otrQtn2L9GmjMrExwVyotRnbiKNOCZxQErUMIqGLQvFBKS24dVFbLbkgbklapVTEEHiyUcvBgUEKw6BNiMIKHqQA20tpyZExEGUS0AOkQNRzHaMJAUAO2lljjdDYc-eChrZXLFvydX2m8_0HJUMQlMgmoECaS6V75Mo62_y5M6FXUjnbuHmNcL4Pa-COHeGJ_JRLXbc_bPzFplqPZey6cjrSVqjeFlgwrL_3uD-cSoV9nDqEMoUVNuzmBnbN5WvU-a-dkNaYL6P_Gag-Qf8V9Lhjp0Lbx8-1dgN7_wsURgsP.Xllp9Q.eSAvVyath0Eb8h1QXxWr5fr0y60; Domain=.d.musta.ch; Secure; HttpOnly; Path=/")
+            request.urlopen(req, timeout=600)
             results["success"].append(url)
         except URLError:
             logger.exception("Error warming up cache!")

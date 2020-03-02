@@ -479,16 +479,12 @@ class CeleryConfig:  # pylint: disable=too-few-public-methods
         },
     }
     CELERYBEAT_SCHEDULE = {
-        "email_reports.schedule_hourly": {
-            "task": "email_reports.schedule_hourly",
-            "schedule": crontab(minute=1, hour="*"),
-        },
         'cache-warmup-hourly': {
             'task': 'cache-warmup',
             'schedule': crontab(minute='*'),  # hourly
             'kwargs': {
                 'strategy_name': 'dashboard_tables',
-                'dashboard_ids': [21],
+                'dashboard_ids': [3592, 9454],
             },
         },
     }
