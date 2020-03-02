@@ -18,6 +18,7 @@
 
 import json
 import logging
+import requests
 from urllib import request
 from urllib.error import URLError
 
@@ -31,6 +32,8 @@ from superset.models.dashboard import Dashboard
 from superset.models.slice import Slice
 from superset.models.tags import Tag, TaggedObject
 from superset.utils.core import parse_human_datetime
+
+import superset.models.core as models
 
 logger = get_task_logger(__name__)
 logger.setLevel(logging.INFO)
@@ -251,7 +254,39 @@ class DashboardTagsStrategy(Strategy):
         return urls
 
 
-strategies = [DummyStrategy, TopNDashboardsStrategy, DashboardTagsStrategy]
+class DashboardTableStrategy(Strategy):
+    name = "dashboard_tables"
+
+    def __init__(self, dashboard_ids=None):
+        super(DashboardTableStrategy, self).__init__()
+        self.dashboard_ids = dashboard_ids or []
+
+    def get_urls(self):
+        urls = []
+        session = db.create_scoped_session()
+
+        # find tables for the dashboard
+        # @expose("/extra_table_metadata/<database_id>/<table_name>/<schema>/")
+        mydb = session.query(models.Database).filter_by(id=108).one()
+        dashboard_id = 3592
+        dashboard = session.query(Dashboard).filter_by(id=dashboard_id).one()
+        for slc in dashboard.slices:
+            schema = "superset"
+            table_name = "dashboard_performance_logging"
+            data = mydb.db_engine_spec.extra_table_metadata(mydb, table_name, schema)
+            latest = data.get("partitions").get("latest").get("ds")
+
+            # send chart urls if its data is landed
+            is_available = True
+            if is_available:
+                url = get_form_data(slc.id, dashboard_id)
+                print('i am url with dashboard filter')
+                urls.append(url)
+
+        return urls
+
+
+strategies = [DummyStrategy, TopNDashboardsStrategy, DashboardTagsStrategy, DashboardTableStrategy]
 
 
 @celery_app.task(name="cache-warmup")

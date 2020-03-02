@@ -482,7 +482,15 @@ class CeleryConfig:  # pylint: disable=too-few-public-methods
         "email_reports.schedule_hourly": {
             "task": "email_reports.schedule_hourly",
             "schedule": crontab(minute=1, hour="*"),
-        }
+        },
+        'cache-warmup-hourly': {
+            'task': 'cache-warmup',
+            'schedule': crontab(minute='*'),  # hourly
+            'kwargs': {
+                'strategy_name': 'dashboard_tables',
+                'dashboard_ids': [21],
+            },
+        },
     }
 
 
