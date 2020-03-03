@@ -269,35 +269,141 @@ class DashboardTableStrategy(Strategy):
         # find tables for all the dash needs to be warmed
         # build map: { datasource_name: slices }
         # this should run once a day
+        dashboard_ids = [12013,
+9462,
+9454,
+1945,
+5429,
+11395,
+8970,
+7224,
+10611,
+10835,
+10694,
+9648,
+11469,
+11610,
+7337,
+12353,
+10916,
+5559,
+11412,
+8050,
+7281,
+2854,
+7645,
+10002,
+6522,
+11682,
+11952,
+11120,
+9387,
+4887,
+12035,
+12425,
+10735,
+12580,
+7226,
+6421,
+12592,
+11799,
+12637,
+11191,
+12641,
+9076,
+11601,
+12149,
+12478,
+8157,
+11535,
+12578,
+11413,
+12523,
+11326,
+3376,
+11201,
+6139,
+9834,
+11288,
+12192,
+1545,
+3211,
+12387,
+11788,
+7725,
+6630,
+11212,
+11580,
+12412,
+11385,
+10311,
+8721,
+8683,
+7670,
+3064,
+7568,
+8063,
+8435,
+11963,
+6978,
+5849,
+8707,
+9468,
+4430,
+12515,
+5616,
+2261,
+10211,
+6208,
+4743,
+9778,
+12237,
+3115,
+10380,
+12384,
+11408,
+12390,
+12386,
+4752,
+6484,
+10754,
+12445,
+11560]
         to_warmup_by_datasource: Dict[str, Dict] = {}
-        for dashboard_id in self.dashboard_ids:
-            dashboard = session.query(Dashboard).filter_by(id=dashboard_id).one()
-            slices = dashboard.slices
-            for slc in slices:
-                datasource_type = slc.datasource_type
-                datasource_name = slc.datasource_name
-                if datasource_type == "table" and datasource_name != "minerva.all":
-                    to_warmup_by_datasource[datasource_name] = to_warmup_by_datasource.get(datasource_name, {
-                        "slice_ids": [],
-                        "is_available": False,
-                    })
-                    to_warmup_by_datasource[datasource_name]["slice_ids"].append(slc.id)
+        for dashboard_id in dashboard_ids: #self.dashboard_ids:
+            dashboard = session.query(Dashboard).filter_by(id=dashboard_id).one_or_none()
+            if dashboard:
+                slices = dashboard.slices
+                for slc in slices:
+                    datasource_type = slc.datasource_type
+                    datasource_name = slc.datasource_name
+                    if datasource_type == "table" and datasource_name != "minerva.all":
+                        to_warmup_by_datasource[datasource_name] = to_warmup_by_datasource.get(datasource_name, {
+                            "slice_ids": [],
+                            "is_available": False,
+                        })
+                        to_warmup_by_datasource[datasource_name]["slice_ids"].append(slc.id)
         print('to_warmup:{}'.format(json.dumps(to_warmup_by_datasource)))
 
         # scan latest partition by datasource
         # this should run multiple times a day
         mydb = session.query(models.Database).filter_by(id=108).one()
-        for datasource_name in to_warmup_by_datasource.items():
+        for (datasource_name, value) in to_warmup_by_datasource.items():
             # schema = "superset"
             # table_name = "dashboard_performance_logging"
             # @expose("/extra_table_metadata/<database_id>/<table_name>/<schema>/")
             parts = datasource_name.split('.')
-            data = mydb.db_engine_spec.extra_table_metadata(mydb, parts[1], parts[0])
-            latest = data.get("partitions").get("latest").get("ds")
-            print('datasource {} latest partition:{}'.format(datasource_name, latest))
+            if len(parts) == 2 and len(parts[1].split()) == 1 and parts[0] != "null":
+                try:
+                    data = mydb.db_engine_spec.extra_table_metadata(mydb, parts[1], parts[0])
+                    if data.get("partitions"):
+                        latest = data.get("partitions").get("latest").get("ds")
+                        print('datasource {} latest partition:{}'.format(datasource_name, latest))
+                except Exception:
+                    print('\n\n datasource_name:{} has error'.format(datasource_name))
 
             # for is_available datasources:
-            for slc in dashboard.slices:
+            if False:
                 # send chart urls if its data is landed
                 is_available = True
                 if is_available:
