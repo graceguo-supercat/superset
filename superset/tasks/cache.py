@@ -31,6 +31,7 @@ from superset.models.dashboard import Dashboard
 from superset.models.slice import Slice
 from superset.models.tags import Tag, TaggedObject
 from superset.utils.core import parse_human_datetime
+from superset.views.utils import build_extra_filters
 
 logger = get_task_logger(__name__)
 logger.setLevel(logging.INFO)
@@ -54,20 +55,12 @@ def get_form_data(chart_id, dashboard=None):
     if not default_filters:
         return form_data
 
-    # do not apply filters if chart is immune to them
-    immune_fields = []
     filter_scopes = json_metadata.get("filter_scopes", {})
-    if filter_scopes:
-        for scopes in filter_scopes.values():
-            for (field, scope) in scopes.items():
-                if chart_id in scope.get("immune", []):
-                    immune_fields.append(field)
-
-    extra_filters = []
-    for filters in default_filters.values():
-        for col, val in filters.items():
-            if col not in immune_fields:
-                extra_filters.append({"col": col, "op": "in", "val": val})
+    layout = json.loads(dashboard.position_json or "{}")
+    # do not apply filters if chart is immune to them
+    extra_filters = build_extra_filters(
+        layout, filter_scopes, default_filters, chart_id
+    )
     if extra_filters:
         form_data["extra_filters"] = extra_filters
 
@@ -181,7 +174,8 @@ class TopNDashboardsStrategy(Strategy):
         dashboards = session.query(Dashboard).filter(Dashboard.id.in_(dash_ids)).all()
         for dashboard in dashboards:
             for chart in dashboard.slices:
-                urls.append(get_url(chart))
+                form_data_with_filters = get_form_data(chart.id, dashboard)
+                urls.append(get_url(form_data_with_filters))
 
         return urls
 
