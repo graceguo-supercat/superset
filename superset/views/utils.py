@@ -308,9 +308,9 @@ def build_extra_filters(
     # do not apply filters if chart if chart not in filter's scope or
     # chart is immune to the filter
     for filter_id, columns in default_filters.items():
-        scopes_by_filter_field = filter_scopes[filter_id] or {}
+        scopes_by_filter_field = filter_scopes.get(filter_id, {})
         for col, val in columns.items():
-            current_field_scopes = scopes_by_filter_field[col]
+            current_field_scopes = scopes_by_filter_field.get(col, {})
             # scope is list of container ids
             scope = current_field_scopes.get("scope", ["ROOT_ID"])
             # immune is list of slice ids

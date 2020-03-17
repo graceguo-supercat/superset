@@ -18,6 +18,7 @@
 
 import json
 import logging
+from typing import Any, Dict, Optional
 from urllib import request
 from urllib.error import URLError
 
@@ -67,7 +68,7 @@ def get_form_data(chart_id, dashboard=None):
     return form_data
 
 
-def get_url(chart):
+def get_url(chart, extra_filters: Optional[Dict[str, Any]] = None):
     """Return external URL for warming up a given chart/table cache."""
     with app.test_request_context():
         baseurl = (
@@ -75,7 +76,7 @@ def get_url(chart):
             "{SUPERSET_WEBSERVER_ADDRESS}:"
             "{SUPERSET_WEBSERVER_PORT}".format(**app.config)
         )
-        return f"{baseurl}{chart.url}"
+        return f"{baseurl}{chart.get_explore_url(overrides=extra_filters)}"
 
 
 class Strategy:
@@ -175,7 +176,7 @@ class TopNDashboardsStrategy(Strategy):
         for dashboard in dashboards:
             for chart in dashboard.slices:
                 form_data_with_filters = get_form_data(chart.id, dashboard)
-                urls.append(get_url(form_data_with_filters))
+                urls.append(get_url(chart, form_data_with_filters))
 
         return urls
 
