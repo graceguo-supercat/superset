@@ -18,7 +18,7 @@
 import json
 from copy import deepcopy
 
-from superset import db
+from superset import app, db
 from superset.connectors.sqla.models import SqlaTable
 from superset.utils.core import get_example_database
 
@@ -117,6 +117,18 @@ class TestDatasource(SupersetTestCase):
                 self.assertEqual(resp[k]["id"], datasource_post[k]["id"])
             else:
                 self.assertEqual(resp[k], datasource_post[k])
+
+    def test_save_with_health_check(self):
+        def my_check():
+            return "Warning message!"
+
+        app.config["DATASET_HEALTH_CHECK"] = my_check
+        self.login(username="admin")
+        tbl_id = self.get_table_by_name("birth_names").id
+        datasource_post["id"] = tbl_id
+        data = dict(data=json.dumps(datasource_post))
+        resp = self.get_json_resp("/datasource/save/", data)
+        self.assertEqual(resp["health_check_message"], "hi test")
 
     def save_datasource_from_dict(self, datasource_dict):
         data = dict(data=json.dumps(datasource_post))
