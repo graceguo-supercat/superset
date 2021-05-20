@@ -85,10 +85,12 @@ export const TIME_FILTER_LABELS = {
 };
 
 export const FILTER_CONFIG_ATTRIBUTES = {
+  CLEARABLE: 'clearable',
   DEFAULT_VALUE: 'defaultValue',
   MULTIPLE: 'multiple',
   SEARCH_ALL_OPTIONS: 'searchAllOptions',
-  CLEARABLE: 'clearable',
+  SORT_ASCENDING: 'asc',
+  SORT_METRIC: 'metric',
 };
 
 export const FILTER_OPTIONS_LIMIT = 1000;
